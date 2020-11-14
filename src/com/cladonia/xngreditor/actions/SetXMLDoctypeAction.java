@@ -91,7 +91,7 @@ public class SetXMLDoctypeAction extends AbstractAction {
 				String name = dialog.getName();
 				
 				// get the keyword (SYSTEM or PUBLIC)
-				String type = dialog.getType();
+				String type = dialog.getType2();
 				
 				// get the public identifier
 				String publicID = dialog.getPublicID();

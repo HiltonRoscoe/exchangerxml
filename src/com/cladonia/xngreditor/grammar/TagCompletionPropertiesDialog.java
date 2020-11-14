@@ -186,7 +186,7 @@ public class TagCompletionPropertiesDialog extends XngrDialog {
 		if ( checkLocation( location)) {
 			
 			properties.setLocation( location);
-			properties.setType( getType());
+			properties.setType( getType2());
 	
 			super.okButtonPressed();
 		}
@@ -201,7 +201,7 @@ public class TagCompletionPropertiesDialog extends XngrDialog {
 		super.show();
 	}
 	
-	private int getType() {
+	private int getType2() {
 		int result = XMLGrammar.TYPE_DTD;
 
 		if ( xsdTagCompletionCheck.isSelected()) {

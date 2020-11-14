@@ -406,9 +406,9 @@ public class ValidationDialog extends JDialog {
 		return result;
 	}
 	
-	public int getType() {
+	 public int getType2() {
 		return getValidationGrammar();
-	}
+	 }
 	
 	public boolean useForCompletion() {
 		if ( useForCompletionCheck.isEnabled()) {

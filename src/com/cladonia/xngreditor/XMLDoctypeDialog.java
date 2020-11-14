@@ -304,7 +304,7 @@ public class XMLDoctypeDialog extends XngrDialog {
 	 *
 	 * @return String The DOCTYPE type
 	 */
-	public String getType()
+	public String getType2()
 	{
 		int index = typeField.getSelectedIndex();
 		
