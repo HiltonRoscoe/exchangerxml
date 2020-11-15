@@ -57,15 +57,7 @@
 	<classpathentry kind="lib" path="lib/saaj-api.jar"/>
 	<classpathentry kind="lib" path="lib/saaj-impl.jar"/>
 	<classpathentry kind="lib" path="lib/saxon.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9.jar" sourcepath="E:/Downloads/Saxon/saxonb9-1-0-3source.zip"/>
-	<classpathentry kind="lib" path="lib/saxon9-dom.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-dom4j.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-jdom.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-s9api.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-sql.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-xom.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-xpath.jar"/>
-	<classpathentry kind="lib" path="lib/saxon9-xqj.jar"/>
+	<classpathentry kind="lib" path="lib/saxon9he.jar" sourcepath="E:/Downloads/Saxon/saxonb9-1-0-3source.zip"/>
 	<classpathentry kind="lib" path="lib/serializer.jar"/>
 	<classpathentry kind="lib" path="lib/soap.jar"/>
 	<classpathentry kind="lib" path="lib/trang.jar"/>
