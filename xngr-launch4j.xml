@@ -17,15 +17,15 @@
   <cmdLine></cmdLine>
   <chdir>.</chdir>
   <priority>normal</priority>
-  <downloadUrl>http://java.com/download</downloadUrl>
+  <downloadUrl>https://adoptopenjdk.net/</downloadUrl>
   <supportUrl></supportUrl>
   <customProcName>true</customProcName>
   <stayAlive>false</stayAlive>
   <manifest></manifest>
   <icon>xngr-editor.ico</icon>
   <jre>
-    <path></path>
-    <minVersion>1.8.0_0</minVersion>
+    <path>C:\Program Files\RedHat\java-1.8.0-openjdk-1.8.0.151-1</path>
+    <minVersion>1.8.0</minVersion>
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
     <initialHeapSize>256</initialHeapSize>
