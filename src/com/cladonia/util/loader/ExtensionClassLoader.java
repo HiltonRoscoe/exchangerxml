@@ -32,7 +32,7 @@ import com.cladonia.xml.XngrURLUtilities;
  * @author Dogsbay
  */
 public class ExtensionClassLoader extends URLClassLoader {
-    private static final boolean VERBOSE = false;
+    private static final boolean VERBOSE = true;
     
 	private EndorsedClassLoader endorsedLoader = null;
 	private boolean endorsing = false;

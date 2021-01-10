@@ -82,7 +82,7 @@ public class Saxon2Debugger extends XSLTDebugger implements Debugger
         Configuration config = new Configuration();
         factory.setConfiguration(config);
         // In basic XSLT, all nodes are untyped by definition
-        config.setAllNodesUntyped(true);
+       // config.setAllNodesUntyped(true);
         config.setDebugger(this);
         
             TraceListener traceListener = new net.sf.saxon.trace.XSLTTraceListener();

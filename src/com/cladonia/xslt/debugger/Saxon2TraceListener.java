@@ -22,6 +22,9 @@ import javax.security.auth.login.Configuration;
 import javax.xml.transform.stream.StreamResult;
 import java.io.OutputStreamWriter;
 
+import net.sf.saxon.event.Emitter;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.event.XMLEmitter;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.om.Validation;
@@ -935,15 +938,18 @@ public class Saxon2TraceListener implements TraceListener {
     Controller con = context.getController();
  
     Properties props = context.getController().getOutputProperties();
- 
+
     StreamResult sr = new StreamResult(new OutputStreamWriter(
         this._XSLTDebugger._outputStream));
 
+    XMLEmitter emitter = new XMLEmitter();
+
     try
     {
-    	SchemaType schemaType = null;
+        emitter.setStreamResult(this._XSLTDebugger._sresult);
     	//tcurley 07-05-08 changed for saxon 9
-    	context.changeOutputDestination(props, this._XSLTDebugger._sresult, true, net.sf.saxon.Configuration.XSLT, Validation.STRICT , schemaType);
+        SchemaType schemaType = null;
+    	context.changeOutputDestination(emitter, true, Validation.STRICT , schemaType);
     } 
 	catch (Exception ex)
     {
