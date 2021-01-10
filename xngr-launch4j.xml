@@ -25,7 +25,7 @@
   <icon>xngr-editor.ico</icon>
   <jre>
     <path></path>
-    <minVersion>1.6.0_0</minVersion>
+    <minVersion>1.8.0_0</minVersion>
     <maxVersion></maxVersion>
     <jdkPreference>preferJre</jdkPreference>
     <initialHeapSize>256</initialHeapSize>
