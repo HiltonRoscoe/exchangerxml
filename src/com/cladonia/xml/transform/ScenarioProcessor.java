@@ -426,7 +426,7 @@ public class ScenarioProcessor {
         DynamicQueryContext dynamicContext = new DynamicQueryContext( config);
 
         if ( input != null) {
-	    	dynamicContext.setContextItem( xquery.buildDocument( input));
+	    	dynamicContext.setContextItem(xquery.buildDocument( input).getRootNode());
         }
         
         try {
