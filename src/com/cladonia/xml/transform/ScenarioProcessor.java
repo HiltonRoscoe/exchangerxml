@@ -32,14 +32,14 @@ import javax.xml.transform.stream.StreamSource;
 
 import net.sf.saxon.Configuration;
 import net.sf.saxon.Controller;
-import net.sf.saxon.FeatureKeys;
-import net.sf.saxon.event.MessageEmitter;
-import net.sf.saxon.instruct.TerminationException;
+import net.sf.saxon.lib.FeatureKeys;
+import net.sf.saxon.serialize.MessageEmitter;
+import net.sf.saxon.expr.instruct.TerminationException;
 import net.sf.saxon.om.SequenceIterator;
 import net.sf.saxon.query.DynamicQueryContext;
 import net.sf.saxon.query.StaticQueryContext;
 import net.sf.saxon.query.XQueryExpression;
-import net.sf.saxon.trace.TraceListener;
+import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.trans.XPathException;
 
 import org.apache.avalon.framework.logger.Logger;

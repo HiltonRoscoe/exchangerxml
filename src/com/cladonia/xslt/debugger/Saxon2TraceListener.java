@@ -22,19 +22,19 @@ import javax.security.auth.login.Configuration;
 import javax.xml.transform.stream.StreamResult;
 import java.io.OutputStreamWriter;
 
-import net.sf.saxon.event.Emitter;
+import net.sf.saxon.serialize.Emitter;
 import net.sf.saxon.event.Receiver;
-import net.sf.saxon.event.XMLEmitter;
+import net.sf.saxon.serialize.XMLEmitter;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.om.Validation;
-import net.sf.saxon.trace.TraceListener;
+import net.sf.saxon.lib.Validation;
+import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.style.XSLTemplate;
 import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.style.StyleElement;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamespaceConstant;
+import net.sf.saxon.lib.NamespaceConstant;
 //tcurley 07-05-08 changed for saxon 9
 //import net.sf.saxon.style.StandardNames;
 import net.sf.saxon.om.StandardNames;

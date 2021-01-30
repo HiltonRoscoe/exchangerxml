@@ -32,11 +32,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.event.MessageEmitter;
+import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.trace.InstructionInfo;
-import net.sf.saxon.trace.TraceListener;
+import net.sf.saxon.lib.TraceListener;
 
 import org.apache.fop.apps.FOPException;
 import org.bounce.util.BrowserLauncher;
@@ -804,12 +804,14 @@ public class ScenarioUtilities {
 			}
 			
 			try {
-				//processor.save( outputDocument);
-				//outputDocument = new ExchangerDocument(processor.getOutputText());
+
+				ExchangerDocument outputDocument = new ExchangerDocument(processor.getOutputText());
+				//processor.save(outputDocument);
+				outputDocument = new ExchangerDocument(processor.getOutputText());
 				
-				//if((listenToErrors == true) && (messageOutputStream != null)) {
-					//System.out.println("messages: "+(messageOutputStream).toString());
-				//}
+				if((listenToErrors == true) && (messageOutputStream != null)) {
+					System.out.println("messages: "+(messageOutputStream).toString());
+				}
 				returnNumber = schematronTraceListener.getErrorCounter();
 					
 			} catch ( Exception e) {

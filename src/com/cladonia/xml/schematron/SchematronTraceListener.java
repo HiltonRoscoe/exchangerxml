@@ -7,16 +7,16 @@ import javax.xml.transform.SourceLocator;
 
 import com.cladonia.xngreditor.ExchangerEditor;
 
-import net.sf.saxon.event.MessageEmitter;
+import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.s9api.MessageListener;
 import net.sf.saxon.s9api.XdmNode;
-import net.sf.saxon.tinytree.TinyNodeImpl;
-import net.sf.saxon.tinytree.TinyTextImpl;
-import net.sf.saxon.tinytree.TinyTree;
+import net.sf.saxon.tree.tiny.TinyNodeImpl;
+import net.sf.saxon.tree.tiny.TinyTextImpl;
+import net.sf.saxon.tree.tiny.TinyTree;
 import net.sf.saxon.trace.InstructionInfo;
-import net.sf.saxon.trace.TraceListener;
+import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.type.TypeHierarchy;
 
@@ -106,7 +106,7 @@ public class SchematronTraceListener implements TraceListener {
 			setCurrentLineNumber(((TinyTextImpl)item).getLineNumber());
 			setCurrentColumn(((TinyTextImpl)item).getColumnNumber());
 		}
-		else if(item instanceof net.sf.saxon.tinytree.TinyNodeImpl) {
+		else if(item instanceof net.sf.saxon.tree.tiny.TinyNodeImpl) {
 			//System.out.println("startCurrentItem: "+((TinyNodeImpl)item).getLocalPart()+ " - line: "+((TinyNodeImpl)item).getLineNumber());
 			setCurrentLineNumber(((TinyNodeImpl)item).getLineNumber());
 			setCurrentColumn(((TinyNodeImpl)item).getColumnNumber());

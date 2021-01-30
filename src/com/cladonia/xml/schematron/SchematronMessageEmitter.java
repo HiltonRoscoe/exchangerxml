@@ -1,6 +1,6 @@
 package com.cladonia.xml.schematron;
 
-import net.sf.saxon.event.MessageEmitter;
+import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.trans.XPathException;
 
