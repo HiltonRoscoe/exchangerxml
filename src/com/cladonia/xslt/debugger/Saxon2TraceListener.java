@@ -23,19 +23,17 @@ import javax.security.auth.login.Configuration;
 import javax.xml.transform.stream.StreamResult;
 import java.io.OutputStreamWriter;
 
+import net.sf.saxon.lib.*;
 import net.sf.saxon.serialize.Emitter;
 import net.sf.saxon.event.Receiver;
 import net.sf.saxon.serialize.XMLEmitter;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.lib.Validation;
-import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.style.XSLTemplate;
 import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.style.StyleElement;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.lib.NamespaceConstant;
 //tcurley 07-05-08 changed for saxon 9
 //import net.sf.saxon.style.StandardNames;
 import net.sf.saxon.om.StandardNames;
@@ -193,7 +191,7 @@ public class Saxon2TraceListener implements TraceListener {
         // this TraceListener ignores some events to reduce the volume of output
         return;
     }
-    NamePool pool = context.getController().getNamePool();
+    NamePool pool = context.getController().getConfiguration().getNamePool();
     String msg = /*AbstractTraceListener.spaces(indent) + '<' +*/ tag;
 
     //String n = (String)instruction.getProperty("name");
@@ -939,8 +937,6 @@ public class Saxon2TraceListener implements TraceListener {
 
     //Outputter op = null;
     Controller con = context.getController();
- 
-    Properties props = context.getController().getOutputProperties();
 
     StreamResult sr = new StreamResult(new OutputStreamWriter(
         this._XSLTDebugger._outputStream));
@@ -950,9 +946,10 @@ public class Saxon2TraceListener implements TraceListener {
     try
     {
         emitter.setStreamResult(this._XSLTDebugger._sresult);
-    	//tcurley 07-05-08 changed for saxon 9
-        SchemaType schemaType = null;
-    	context.changeOutputDestination(emitter, Validation.STRICT , schemaType);
+    	ParseOptions options = new ParseOptions();
+        options.setSchemaValidationMode(Validation.STRICT);
+
+    	context.changeOutputDestination(emitter, options);
     } 
 	catch (Exception ex)
     {
@@ -962,7 +959,7 @@ public class Saxon2TraceListener implements TraceListener {
 
   }
 
-  public void setOutputDestination(PrintStream ps){
+  public void setOutputDestination(Logger l){
     return;
   }
 

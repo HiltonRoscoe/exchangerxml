@@ -1,9 +1,12 @@
 
 package com.cladonia.xslt.debugger;
 
+import javax.xml.transform.Templates;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 
+import net.sf.saxon.jaxp.SaxonTransformerFactory;
+import net.sf.saxon.style.XSLStylesheet;
 /*
 import com.icl.saxon.Controller;
 import com.icl.saxon.trace.TraceListener;
@@ -30,7 +33,7 @@ import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.style.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.Controller;
-import net.sf.saxon.value.Value;
+import net.sf.saxon.value.AtomicValue;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.TransformerFactoryImpl;
@@ -41,7 +44,7 @@ import net.sf.saxon.expr.instruct.Debugger;
 import net.sf.saxon.expr.instruct.SlotManager;
 import net.sf.saxon.expr.StackFrame;
 import net.sf.saxon.om.StructuredQName;
-import net.sf.saxon.om.ValueRepresentation;
+import net.sf.saxon.om.Sequence;
 
 public class Saxon2Debugger extends XSLTDebugger implements Debugger
 {
@@ -111,11 +114,10 @@ public class Saxon2Debugger extends XSLTDebugger implements Debugger
 
 		try
 		{
-                sheet = (PreparedStylesheet)factory.newTemplates(new StreamSource(
+			Templates template = factory.newTemplates(new StreamSource(
 					_stylesheetFilename));
-
-                instance = sheet.newTransformer();
-
+			instance = template.newTransformer();
+			sheet = (PreparedStylesheet)template;
 		}
 		catch (Exception Ex) {}
 	
@@ -146,7 +148,7 @@ public class Saxon2Debugger extends XSLTDebugger implements Debugger
               }
               catch (Exception ex) {}
 
-		  ((Controller)t).setMessageEmitter(me);
+			((net.sf.saxon.jaxp.TransformerImpl)t).getUnderlyingController().setMessageEmitter(me);
 		}
 		
 		//((Controller)t).setLineNumbering(true);
@@ -203,14 +205,14 @@ public Vector getLocalVariables()
 		  return null;
 		}
 		
-		ValueRepresentation [] vrs = sf.getStackFrameValues();
+		Sequence [] vrs = sf.getStackFrameValues();
 		
 		int len = vrs.length;
 		
 		for (int i=0; i<len; i++)
 		{
 		  
-		  //ValueRepresentation  vr = vrs[i];
+		  //Sequence  vr = vrs[i];
 		  
 		  
 		}
@@ -245,7 +247,7 @@ public Vector getLocalVariables()
 		  //System.out.println("Key: " + key + "  Value: " + value);
 		  
 		  
-		  ValueRepresentation vr = context.evaluateLocalVariable( ((Integer)key).intValue() )  ;
+		  Sequence vr = context.evaluateLocalVariable( ((Integer)key).intValue() )  ;
 	
 		String val = "";
 		
@@ -262,14 +264,15 @@ public Vector getLocalVariables()
 	
 		  		//tcurley 07-05-08 changed for saxon9
 	   		  //XSLVariableDeclaration vd = ssi._styleElement.bindVariable(((Integer)value).intValue());
-		  		XSLVariableDeclaration vd = ssi._styleElement.bindVariable(structQNameValue);
+		  		SourceBinding vd = ssi._styleElement.bindVariable(structQNameValue);
 		  	    //String name = vd.getVariableName();
-		  		String name = vd.getVariableDisplayName();
+		  		String name = vd.getVariableQName().getDisplayName();
 	
 		  		XSLTVariable var = new XSLTVariable(name);
-	
-		  	    val = ((Value)vr).getStringValue();
-			  	//System.out.println("Value: " + val);
+
+		  		//very likely wrong value
+		  	    val = ((Sequence)vr).toString();
+			  	System.out.println("Value: " + val);
 	
 		    	if (val != null)
 		    	{
@@ -304,7 +307,7 @@ public Vector getLocalVariables()
 		  return null;
 		}
 		
-		ValueRepresentation [] vrs = sf.getStackFrameValues();
+		Sequence [] vrs = sf.getStackFrameValues();
 		
 		int len = vrs.length;
 		
@@ -335,7 +338,7 @@ public Vector getLocalVariables()
 		  //System.out.println("Key: " + key + "  Value: " + value);
 		  
 		  
-		  ValueRepresentation vr = context.evaluateLocalVariable(cnt)  ;
+		  Sequence vr = context.evaluateLocalVariable(cnt)  ;
 	
 		String val = "";
 		
@@ -352,14 +355,15 @@ public Vector getLocalVariables()
 	
 		  		//tcurley 07-05-08 changed for saxon9
 	   		  //XSLVariableDeclaration vd = ssi._styleElement.bindVariable(((Integer)value).intValue());
-		  		XSLVariableDeclaration vd = ssi._styleElement.bindVariable(structQNameValue);
+		  		SourceBinding vd = ssi._styleElement.bindVariable(structQNameValue);
 		  	    //String name = vd.getVariableName();
-		  		String name = vd.getVariableDisplayName();
+		  		String name = vd.getVariableQName().getDisplayName();
 	
 		  		XSLTVariable var = new XSLTVariable(name);
-	
-		  	    val = ((Value)vr).getStringValue();
-			  	//System.out.println("Value: " + val);
+
+		  		//TODO check value
+		  	    val = vr.toString();
+				System.out.println("Value: " + val);
 	
 		    	if (val != null)
 		    	{
@@ -433,11 +437,12 @@ public Vector getGlobalVariables()
 	if (ssi == null)
 		return null;
 
-	XSLStylesheet sheet = ssi._styleElement.getContainingStylesheet();
-	
+	//not sure if this is a safe cast
+/*	XSLStylesheet sheet = (XSLStylesheet) ssi._styleElement.getContainingStylesheet();
+sheet.
 	StylesheetModule tempSheet = null;
-	StylesheetModule module = sheet.getPrincipalStylesheetModule();
-	while ( ( tempSheet = module.getImporter()) != null)
+//	StylesheetModule module = sheet.getPrincipalStylesheetModule();
+	while ( ( tempSheet = sheet.getImporter()) != null)
 	  module = tempSheet;
 	
 	//XSLStylesheet sheet = ssi._styleElement.getPrincipalStylesheet();
@@ -491,7 +496,7 @@ public Vector getGlobalVariables()
 	  }
 	  
 	}
-	
+*/
 
 	return glvars;
 	
@@ -614,9 +619,9 @@ public void cleanUp() {
 	//	T Curley 04.12.06
 	//fixed a null pointer exception bug with the debugger
 	if(t != null) {
-		((Controller)t).removeTraceListener( _saxon2TraceListener);
+		((net.sf.saxon.jaxp.TransformerImpl)t).getUnderlyingController().removeTraceListener( _saxon2TraceListener);
 		//((Controller)t).setMessageEmitter( null);
-		((Controller)t).clearDocumentPool();
+		((net.sf.saxon.jaxp.TransformerImpl)t).getUnderlyingController().clearDocumentPool();
 	}
 	
 	if(me != null) {

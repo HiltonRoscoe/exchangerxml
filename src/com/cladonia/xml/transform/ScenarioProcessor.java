@@ -324,8 +324,8 @@ public class ScenarioProcessor {
 		if(traceListener != null) {
 			
 			transformer.setParameter(FeatureKeys.TRACE_LISTENER, traceListener);
-			((Controller)transformer).addTraceListener(traceListener);
-			((Controller)transformer).setMessageEmitter(messageEmitter);
+			((net.sf.saxon.jaxp.TransformerImpl)transformer).getUnderlyingController().addTraceListener(traceListener);
+			((net.sf.saxon.jaxp.TransformerImpl)transformer).getUnderlyingController().setMessageEmitter(messageEmitter);
 			 
 			
 		}		
@@ -426,7 +426,7 @@ public class ScenarioProcessor {
         DynamicQueryContext dynamicContext = new DynamicQueryContext( config);
 
         if ( input != null) {
-	    	dynamicContext.setContextNode( xquery.buildDocument( input));
+	    	dynamicContext.setContextItem( xquery.buildDocument( input));
         }
         
         try {

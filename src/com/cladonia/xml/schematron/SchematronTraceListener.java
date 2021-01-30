@@ -9,6 +9,7 @@ import javax.xml.transform.SourceLocator;
 import com.cladonia.xngreditor.ExchangerEditor;
 
 import net.sf.saxon.Controller;
+import net.sf.saxon.lib.Logger;
 import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
@@ -21,6 +22,7 @@ import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.type.TypeHierarchy;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SchematronTraceListener implements TraceListener {
 
@@ -156,8 +158,8 @@ public class SchematronTraceListener implements TraceListener {
 		this.errorCounter++;
 	}
 
-	public void setOutputDestination(PrintStream ps){
-		return;
+	public void setOutputDestination(Logger logger){
+    	throw new NotImplementedException();
 	}
 
 	public void open(Controller controller){
