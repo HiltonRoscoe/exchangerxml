@@ -216,7 +216,7 @@ public class Saxon2TraceListener implements TraceListener {
       
     //System.out.println();
     NamePool np = styleElement.getNamePool();
-    int code = styleElement.getNameCode();
+    int code = styleElement.getFingerprint();
     _stylesheetLocalName = np.getLocalName(code);
     _stylesheetURI = np.getURI(code);
     _stylesheetDisplayName = np.getDisplayName(code);
@@ -453,7 +453,7 @@ public class Saxon2TraceListener implements TraceListener {
     String previousStylesheetURI = _stylesheetURI;
 
     NamePool np = styleElement.getNamePool();
-    int code = styleElement.getNameCode();
+    int code = styleElement.getFingerprint();
     _stylesheetLocalName = np.getLocalName(code);
     _stylesheetURI = np.getURI(code);
     _stylesheetDisplayName = np.getDisplayName(code);
