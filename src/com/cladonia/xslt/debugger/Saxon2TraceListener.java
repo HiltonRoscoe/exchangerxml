@@ -1,5 +1,6 @@
 package com.cladonia.xslt.debugger;
 
+import java.io.PrintStream;
 import java.util.Stack;
 import java.util.HashMap;
 import java.util.Vector;
@@ -142,7 +143,9 @@ public class Saxon2TraceListener implements TraceListener {
     }
 
 
-  
+ public void open(Controller controller){
+      open();
+ }
   
   public void open()
   {
@@ -949,7 +952,7 @@ public class Saxon2TraceListener implements TraceListener {
         emitter.setStreamResult(this._XSLTDebugger._sresult);
     	//tcurley 07-05-08 changed for saxon 9
         SchemaType schemaType = null;
-    	context.changeOutputDestination(emitter, true, Validation.STRICT , schemaType);
+    	context.changeOutputDestination(emitter, Validation.STRICT , schemaType);
     } 
 	catch (Exception ex)
     {
@@ -959,6 +962,9 @@ public class Saxon2TraceListener implements TraceListener {
 
   }
 
+  public void setOutputDestination(PrintStream ps){
+    return;
+  }
 
   public void handleOutputDocumentClose(StyleElement styleElement)
   {

@@ -1,12 +1,14 @@
 package com.cladonia.xml.schematron;
 
 import java.io.OutputStream;
+import java.io.PrintStream;
 
 import javax.swing.SwingUtilities;
 import javax.xml.transform.SourceLocator;
 
 import com.cladonia.xngreditor.ExchangerEditor;
 
+import net.sf.saxon.Controller;
 import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
@@ -92,7 +94,7 @@ public class SchematronTraceListener implements TraceListener {
 		
 	}
 
-	@Override
+//	@Override
 	public void open() {
 		//System.out.println("open");
 		
@@ -152,5 +154,13 @@ public class SchematronTraceListener implements TraceListener {
 
 	public void incrementErrorCounter() {
 		this.errorCounter++;
+	}
+
+	public void setOutputDestination(PrintStream ps){
+		return;
+	}
+
+	public void open(Controller controller){
+    	open();
 	}
 }

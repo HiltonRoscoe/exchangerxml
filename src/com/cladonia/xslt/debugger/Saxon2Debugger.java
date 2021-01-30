@@ -20,32 +20,25 @@ import com.icl.saxon.expr.Value;
 
 import javax.xml.transform.stream.StreamSource;
 
-import java.util.Vector;
-import java.util.Set;
-import java.util.Map;
+import java.util.*;
 
 
 import java.io.PrintWriter;
-import java.util.List;
-import java.util.Iterator;
-import java.util.HashMap;
-import net.sf.saxon.event.MessageEmitter;
-import net.sf.saxon.trace.TraceListener;
+
+import net.sf.saxon.serialize.MessageEmitter;
+import net.sf.saxon.lib.TraceListener;
+import net.sf.saxon.style.*;
 import net.sf.saxon.trans.XPathException;
 import net.sf.saxon.Controller;
 import net.sf.saxon.value.Value;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.Configuration;
 import net.sf.saxon.TransformerFactoryImpl;
-import net.sf.saxon.FeatureKeys;
+import net.sf.saxon.lib.FeatureKeys;
 import net.sf.saxon.PreparedStylesheet;
-import net.sf.saxon.style.XSLStylesheet;
-import net.sf.saxon.style.XSLVariable;
-import net.sf.saxon.style.XSLParam;
-import net.sf.saxon.style.XSLVariableDeclaration;
-import net.sf.saxon.instruct.Bindery;
-import net.sf.saxon.instruct.Debugger;
-import net.sf.saxon.instruct.SlotManager;
+import net.sf.saxon.expr.instruct.Bindery;
+import net.sf.saxon.expr.instruct.Debugger;
+import net.sf.saxon.expr.instruct.SlotManager;
 import net.sf.saxon.expr.StackFrame;
 import net.sf.saxon.om.StructuredQName;
 import net.sf.saxon.om.ValueRepresentation;
@@ -442,15 +435,14 @@ public Vector getGlobalVariables()
 
 	XSLStylesheet sheet = ssi._styleElement.getContainingStylesheet();
 	
-	XSLStylesheet tempSheet = null;
-	
-	while ( ( tempSheet = sheet.getImporter()) != null)
-	  sheet = tempSheet;
+	StylesheetModule tempSheet = null;
+	StylesheetModule module = sheet.getPrincipalStylesheetModule();
+	while ( ( tempSheet = module.getImporter()) != null)
+	  module = tempSheet;
 	
 	//XSLStylesheet sheet = ssi._styleElement.getPrincipalStylesheet();
 
-	
-	List topLevelElements = sheet.getTopLevel();
+	List topLevelElements = new ArrayList();// module.getTopLevel();
 	
 	Iterator it = topLevelElements.iterator();
 
