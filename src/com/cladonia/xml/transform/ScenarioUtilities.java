@@ -32,7 +32,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
 import net.sf.saxon.trace.InstructionInfo;
@@ -762,6 +761,8 @@ public class ScenarioUtilities {
 				messageOutputStream = new SchematronMessageOutputStream(editor, schematronTraceListener, scenario.getInputURL());
 				MessageEmitter me = new MessageEmitter();
 				//me.setWriter(messageOutputStream);
+				//set to avoid null issue.
+				me.setPipelineConfiguration(new PipelineConfiguration(new Configuration()));
 				me.setOutputStream(messageOutputStream);
 				
 				Properties props = new Properties(); 
