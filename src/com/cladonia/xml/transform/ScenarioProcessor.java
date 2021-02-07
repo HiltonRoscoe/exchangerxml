@@ -101,9 +101,11 @@ public class ScenarioProcessor {
 	private TransformerFactory getTransformerFactory() {
 		TransformerFactory factory = TransformerFactory.newInstance();
 		factory.setErrorListener( listener);
-		factory.setAttribute(
-                FeatureKeys.LINE_NUMBERING,
-                Boolean.TRUE);
+		if(scenario.getProcessor() != ScenarioProperties.PROCESSOR_XALAN)
+			factory.setAttribute(
+            	    FeatureKeys.LINE_NUMBERING,
+                	Boolean.TRUE);
+
 		return factory;
 	}
 	
