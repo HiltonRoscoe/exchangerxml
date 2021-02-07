@@ -32,11 +32,13 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
-import net.sf.saxon.event.MessageEmitter;
+import net.sf.saxon.Configuration;
+import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.trace.InstructionInfo;
-import net.sf.saxon.trace.TraceListener;
+import net.sf.saxon.lib.TraceListener;
 
 import org.apache.fop.apps.FOPException;
 import org.bounce.util.BrowserLauncher;
@@ -664,7 +666,8 @@ public class ScenarioUtilities {
 	
 	
 	public static ExchangerDocument schematronPhase1Transform(ExchangerEditor editor, ExchangerDocument document, ScenarioProperties scenario) {
-		
+
+		scenario.add(new ScenarioProperties(new ParameterProperties("diagnose","yes")));
 		ScenarioProcessor processor = new ScenarioProcessor( scenario, document);
 		processor.init();
 
@@ -683,7 +686,7 @@ public class ScenarioUtilities {
 			
 			
 			try {
-				
+
 				processor.openStylesheet();
 				processor.execute();
 				
@@ -762,6 +765,8 @@ public class ScenarioUtilities {
 				messageOutputStream = new SchematronMessageOutputStream(editor, schematronTraceListener, scenario.getInputURL());
 				MessageEmitter me = new MessageEmitter();
 				//me.setWriter(messageOutputStream);
+				//set to avoid null issue.
+				me.setPipelineConfiguration(new PipelineConfiguration(new Configuration()));
 				me.setOutputStream(messageOutputStream);
 				
 				Properties props = new Properties(); 
@@ -804,12 +809,14 @@ public class ScenarioUtilities {
 			}
 			
 			try {
-				//processor.save( outputDocument);
-				//outputDocument = new ExchangerDocument(processor.getOutputText());
+
+				ExchangerDocument outputDocument = new ExchangerDocument(processor.getOutputText());
+				//processor.save(outputDocument);
+				outputDocument = new ExchangerDocument(processor.getOutputText());
 				
-				//if((listenToErrors == true) && (messageOutputStream != null)) {
-					//System.out.println("messages: "+(messageOutputStream).toString());
-				//}
+				if((listenToErrors == true) && (messageOutputStream != null)) {
+					System.out.println("messages: "+(messageOutputStream).toString());
+				}
 				returnNumber = schematronTraceListener.getErrorCounter();
 					
 			} catch ( Exception e) {

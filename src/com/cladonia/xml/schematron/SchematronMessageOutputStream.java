@@ -30,16 +30,16 @@ public class SchematronMessageOutputStream extends OutputStream {
 		this.editor = _editor;
 		this.schematronTraceListener = schematronTraceListener;
 		this.systemId = systemId;
-		
-		/*SwingUtilities.invokeLater(new Runnable() {
+		/*
+		SwingUtilities.invokeLater(new Runnable() {
 
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
 				editor.getOutputPanel().startCheck( "SCHEMATRON", "Schematron Version ["+FileUtilities.getSchematronVersion()+"]...");
 			}						
-		});*/
-		
+		});
+		*/
 	}
 
 	@Override

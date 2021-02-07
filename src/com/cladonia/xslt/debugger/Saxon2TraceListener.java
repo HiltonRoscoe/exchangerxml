@@ -1,5 +1,6 @@
 package com.cladonia.xslt.debugger;
 
+import java.io.PrintStream;
 import java.util.Stack;
 import java.util.HashMap;
 import java.util.Vector;
@@ -22,23 +23,22 @@ import javax.security.auth.login.Configuration;
 import javax.xml.transform.stream.StreamResult;
 import java.io.OutputStreamWriter;
 
-import net.sf.saxon.event.Emitter;
+import net.sf.saxon.expr.parser.Location;
+import net.sf.saxon.lib.*;
+import net.sf.saxon.serialize.Emitter;
 import net.sf.saxon.event.Receiver;
-import net.sf.saxon.event.XMLEmitter;
+import net.sf.saxon.serialize.XMLEmitter;
 import net.sf.saxon.om.NamePool;
 import net.sf.saxon.om.Item;
-import net.sf.saxon.om.Validation;
-import net.sf.saxon.trace.TraceListener;
 import net.sf.saxon.style.XSLTemplate;
 import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.style.StyleElement;
 import net.sf.saxon.om.NodeInfo;
-import net.sf.saxon.om.NamespaceConstant;
 //tcurley 07-05-08 changed for saxon 9
 //import net.sf.saxon.style.StandardNames;
 import net.sf.saxon.om.StandardNames;
-import net.sf.saxon.trace.Location;
+import net.sf.saxon.trace.LocationKind;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.Controller;
 import net.sf.saxon.type.SchemaType;
@@ -122,15 +122,15 @@ public class Saxon2TraceListener implements TraceListener {
 
 
         switch (construct) {
-            case Location.LITERAL_RESULT_ELEMENT:
+            case LocationKind.LITERAL_RESULT_ELEMENT:
                 return "LRE";
-            case Location.LITERAL_RESULT_ATTRIBUTE:
+            case LocationKind.LITERAL_RESULT_ATTRIBUTE:
                 return "ATTR";
-            case Location.LET_EXPRESSION:
+            case LocationKind.LET_EXPRESSION:
                 return "xsl:variable";
-            case Location.EXTENSION_INSTRUCTION:
+            case LocationKind.EXTENSION_INSTRUCTION:
                 return "extension-instruction";
-            case Location.TRACE_CALL:
+            case LocationKind.TRACE_CALL:
                 return "user-trace";
             default:
                 return null;
@@ -142,7 +142,9 @@ public class Saxon2TraceListener implements TraceListener {
     }
 
 
-  
+ public void open(Controller controller){
+      open();
+ }
   
   public void open()
   {
@@ -190,7 +192,7 @@ public class Saxon2TraceListener implements TraceListener {
         // this TraceListener ignores some events to reduce the volume of output
         return;
     }
-    NamePool pool = context.getController().getNamePool();
+    NamePool pool = context.getController().getConfiguration().getNamePool();
     String msg = /*AbstractTraceListener.spaces(indent) + '<' +*/ tag;
 
     //String n = (String)instruction.getProperty("name");
@@ -214,7 +216,7 @@ public class Saxon2TraceListener implements TraceListener {
       
     //System.out.println();
     NamePool np = styleElement.getNamePool();
-    int code = styleElement.getNameCode();
+    int code = styleElement.getFingerprint();
     _stylesheetLocalName = np.getLocalName(code);
     _stylesheetURI = np.getURI(code);
     _stylesheetDisplayName = np.getDisplayName(code);
@@ -451,7 +453,7 @@ public class Saxon2TraceListener implements TraceListener {
     String previousStylesheetURI = _stylesheetURI;
 
     NamePool np = styleElement.getNamePool();
-    int code = styleElement.getNameCode();
+    int code = styleElement.getFingerprint();
     _stylesheetLocalName = np.getLocalName(code);
     _stylesheetURI = np.getURI(code);
     _stylesheetDisplayName = np.getDisplayName(code);
@@ -644,8 +646,9 @@ public class Saxon2TraceListener implements TraceListener {
 
     if (element.getDisplayName() !=null &&  element.getDisplayName() !="" && element.getLineNumber() != 0)
     {
-    NamePool np = element.getNamePool();
-    int code = element.getNameCode();
+    NamePool np = element.getConfiguration().getNamePool();
+    // may not be equivelent
+    int code = element.getSchemaType().getFingerprint();
 
     _isInputStartTag = true;
     _inputLocalName = np.getLocalName(code);
@@ -736,8 +739,9 @@ public class Saxon2TraceListener implements TraceListener {
 
     if (element.getDisplayName() !=null &&  element.getDisplayName() !="" && element.getLineNumber() != 0)
     {
-    NamePool np = element.getNamePool();
-    int code = element.getNameCode();
+    NamePool np = element.getConfiguration().getNamePool();
+    // may not be equivelent
+    int code = element.getSchemaType().getFingerprint();
 
     _isInputStartTag = true;
     _inputLocalName = np.getLocalName(code);
@@ -936,8 +940,6 @@ public class Saxon2TraceListener implements TraceListener {
 
     //Outputter op = null;
     Controller con = context.getController();
- 
-    Properties props = context.getController().getOutputProperties();
 
     StreamResult sr = new StreamResult(new OutputStreamWriter(
         this._XSLTDebugger._outputStream));
@@ -947,9 +949,11 @@ public class Saxon2TraceListener implements TraceListener {
     try
     {
         emitter.setStreamResult(this._XSLTDebugger._sresult);
-    	//tcurley 07-05-08 changed for saxon 9
-        SchemaType schemaType = null;
-    	context.changeOutputDestination(emitter, true, Validation.STRICT , schemaType);
+    	ParseOptions options = new ParseOptions();
+        options.setSchemaValidationMode(Validation.STRICT);
+
+        //TODO: Find replacement
+    	//context.changeOutputDestination(emitter, options);
     } 
 	catch (Exception ex)
     {
@@ -959,6 +963,9 @@ public class Saxon2TraceListener implements TraceListener {
 
   }
 
+  public void setOutputDestination(Logger l){
+    return;
+  }
 
   public void handleOutputDocumentClose(StyleElement styleElement)
   {

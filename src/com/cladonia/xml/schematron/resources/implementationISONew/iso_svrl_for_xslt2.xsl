@@ -30,6 +30,11 @@
   
 
   History: 
+   	2010-07-10
+   		* MIT license
+    2010-04-14
+        * Add command line parameter 'terminate' which will terminate on first failed 
+        assert and (optionally) successful report. 
     2009-03-18
     	* Fix atrribute with space "see " which generates wrong name in some processors
     	* rename allow-foreign to allow-rich
@@ -97,27 +102,33 @@
           * Created, using the skeleton code contributed by Oliver Becker
 -->
 <!--
- Derived from Conformance1-5.xsl.
+Open Source Initiative OSI - The MIT License:Licensing
+[OSI Approved License]
 
- Copyright (c) 2001, 2006 Rick Jelliffe and Academia Sinica Computing Center, Taiwan
+This source code was previously available under the zlib/libpng license. 
+Attribution is polite.
 
- This software is provided 'as-is', without any express or implied warranty. 
- In no event will the authors be held liable for any damages arising from 
- the use of this software.
+The MIT License
 
- Permission is granted to anyone to use this software for any purpose, 
- including commercial applications, and to alter it and redistribute it freely,
- subject to the following restrictions:
+Copyright (c) 2004-2010 Rick Jellife and Academia Sinica Computing Centre, Taiwan
 
- 1. The origin of this software must not be misrepresented; you must not claim
- that you wrote the original software. If you use this software in a product, 
- an acknowledgment in the product documentation would be appreciated but is 
- not required.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
- 2. Altered source versions must be plainly marked as such, and must not be 
- misrepresented as being the original software.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
 
- 3. This notice may not be removed or altered from any source distribution.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
 -->
 
 <!-- Ideas nabbed from schematrons by Francis N., Miloslav N. and David C. -->
@@ -131,7 +142,8 @@
             sch.exslt.imports semi-colon delimited string of filenames for some EXSLT implementations          
    		 optimize        "visit-no-attributes"     Use only when the schema has no attributes as the context nodes
 		 generate-fired-rule "true"(default) | "false"  Generate fired-rule elements
-            
+             terminate= yes | no | true | false | assert  Terminate on the first failed assertion or successful report
+                                         Note: whether any output at all is generated depends on the XSLT implementation.
 -->
 
 <xsl:stylesheet
@@ -179,6 +191,8 @@
 <xsl:param name="optimize" />
 <!-- e.g. saxon file.xml file.xsl "sch.exslt.imports=.../string.xsl;.../math.xsl" -->
 <xsl:param name="sch.exslt.imports" />
+
+<xsl:param name="terminate" >false</xsl:param>
 
 <!-- Set the language code for messages -->
 <xsl:param name="langCode">default</xsl:param>
@@ -307,6 +321,14 @@
 			</xsl:if>
 			
 	</svrl:failed-assert>
+	
+	
+		<xsl:if test=" $terminate = 'yes' or $terminate = 'true' ">
+		   <axsl:message terminate="yes">TERMINATING</axsl:message>
+		</xsl:if>
+	    <xsl:if test=" $terminate = 'assert' ">
+		   <axsl:message terminate="yes">TERMINATING</axsl:message>
+		</xsl:if>
 </xsl:template>
 
 <xsl:template name="process-report">
@@ -376,6 +398,11 @@
 			 
 			
 	</svrl:successful-report>
+	
+	
+		<xsl:if test=" $terminate = 'yes' or $terminate = 'true' ">
+		   <axsl:message terminate="yes"  >TERMINATING</axsl:message>
+		</xsl:if>
 </xsl:template>
 
 

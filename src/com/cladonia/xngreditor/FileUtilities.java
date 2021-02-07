@@ -1965,8 +1965,4 @@ public class FileUtilities {
 			return icon;
 		}
 	}
-
-	public static String getSchematronVersion() {
-		return("1.5");
-	}
 }
