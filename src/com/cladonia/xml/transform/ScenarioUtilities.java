@@ -32,8 +32,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamSource;
 
+import net.sf.saxon.Configuration;
+import net.sf.saxon.event.PipelineConfiguration;
 import net.sf.saxon.expr.XPathContext;
 import net.sf.saxon.om.Item;
+import net.sf.saxon.serialize.MessageEmitter;
 import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.lib.TraceListener;
 
@@ -663,7 +666,8 @@ public class ScenarioUtilities {
 	
 	
 	public static ExchangerDocument schematronPhase1Transform(ExchangerEditor editor, ExchangerDocument document, ScenarioProperties scenario) {
-		
+
+		scenario.add(new ScenarioProperties(new ParameterProperties("diagnose","yes")));
 		ScenarioProcessor processor = new ScenarioProcessor( scenario, document);
 		processor.init();
 
@@ -682,7 +686,7 @@ public class ScenarioUtilities {
 			
 			
 			try {
-				
+
 				processor.openStylesheet();
 				processor.execute();
 				
