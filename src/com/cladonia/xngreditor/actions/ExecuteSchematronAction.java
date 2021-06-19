@@ -43,15 +43,15 @@ public class ExecuteSchematronAction extends AbstractAction {
 	
 	private ExecuteSchematronDialog dialog = null;
 	
-	private int schematronPlatformVersion = SCHEMATRON_PLATFORM_1_5;
+	private int schematronPlatformVersion = SCHEMATRON_PLATFORM_SCHXSLT;
 	
-	public static final int SCHEMATRON_PLATFORM_1_5 = 1;
+	public static final int SCHEMATRON_PLATFORM_SCHXSLT = 1;
 	public static final int SCHEMATRON_PLATFORM_ISO = 2;
 	
-	public static final String SCHEMATRON_PLATFORM_1_5_TEXT = "1.5";
+	public static final String SCHEMATRON_PLATFORM_SCHXSLT_TEXT = "SchXslt";
 	public static final String SCHEMATRON_PLATFORM_ISO_TEXT = "ISO Implementation";
 	
-	public static final String SCHEMATRON_1_5_URL = "com/cladonia/xml/schematron/resources/implementation15/schematron-message.xsl";
+	public static final String SCHEMATRON_SCHXSLT_URL = "com/cladonia/xml/schematron/resources/implementationSchxslt2/compile-for-svrl.xsl";
 	
 	/*public static final String SCHEMATRON_ISO_STAGE1_DSDL_INCLUDE_URL = "com/cladonia/xml/schematron/resources/implementationISO/iso_dsdl_include.xsl";
 	public static final String SCHEMATRON_ISO_STAGE2_ABSTRACT_EXPAND_URL = "com/cladonia/xml/schematron/resources/implementationISO/iso_abstract_expand.xsl";
@@ -152,7 +152,7 @@ public class ExecuteSchematronAction extends AbstractAction {
 							//file:///c:/TempSchematron/schematron-message.xsl
 							//schematronPlatformURL = ExchangerEditor.getStaticExtensionClassLoader().getResource("com/cladonia/xml/schematron/resources/schematron-message.xsl");
 							//XngrImageLoader.get().getImage("com/cladonia/xml/schematron/resources/schematron-message.xsl");
-							schematronPlatformVersion = SCHEMATRON_PLATFORM_1_5;
+							schematronPlatformVersion = SCHEMATRON_PLATFORM_SCHXSLT;
 						}
 						else {
 							/*String platformLocationField = dialog.getSchematronPlatformLocationField().getText();
@@ -174,8 +174,8 @@ public class ExecuteSchematronAction extends AbstractAction {
 							public void run() {
 								// TODO Auto-generated method stub
 								String schematronVersionText = "";
-								if(schematronPlatformVersion == SCHEMATRON_PLATFORM_1_5) {
-									schematronVersionText = SCHEMATRON_PLATFORM_1_5_TEXT;
+								if(schematronPlatformVersion == SCHEMATRON_PLATFORM_SCHXSLT) {
+									schematronVersionText = SCHEMATRON_PLATFORM_SCHXSLT_TEXT;
 								}
 								else {
 									schematronVersionText = SCHEMATRON_PLATFORM_ISO_TEXT;
@@ -185,9 +185,9 @@ public class ExecuteSchematronAction extends AbstractAction {
 							}						
 						});
 						
-						if(schematronPlatformVersion == SCHEMATRON_PLATFORM_1_5) {
+						if(schematronPlatformVersion == SCHEMATRON_PLATFORM_SCHXSLT) {
 							
-							URL schematronPlatformURL = ExchangerEditor.getStaticExtensionClassLoader().getResource(SCHEMATRON_1_5_URL);
+							URL schematronPlatformURL = ExchangerEditor.getStaticExtensionClassLoader().getResource(SCHEMATRON_SCHXSLT_URL);
 							ScenarioProperties phase1ScenarioProperties = createPhase1ScenarioProperties(schematronRulesURL, schematronPlatformURL, schematronRulesType);
 							
 							parent.getExecutePreviousXSLTAction().setScenario( phase1ScenarioProperties);

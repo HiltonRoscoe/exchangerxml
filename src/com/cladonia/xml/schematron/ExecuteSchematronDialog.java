@@ -194,8 +194,8 @@ public class ExecuteSchematronDialog extends XngrDialog {
 										new EmptyBorder( 0, 5, 5, 5)));
 			//JPanel schematronPlatformLocationPanel = new JPanel( new BorderLayout());
 			
-			//offer just 1.5 or ISO
-			setSchematronPlatformUse15Button(new JRadioButton("Use 1.5"));
+			//offer just SchXslt or ISO
+			setSchematronPlatformUse15Button(new JRadioButton("Use SchXslt (XSLT 2.0)"));
 			setSchematronPlatformUseISOButton(new JRadioButton("Use ISO Implementation"));
 			
 			getSchematronPlatformUse15Button().setSelected(true);
