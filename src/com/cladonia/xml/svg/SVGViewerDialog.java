@@ -70,8 +70,7 @@ import org.apache.batik.bridge.ScriptSecurity;
 import org.apache.batik.bridge.UpdateManagerEvent;
 import org.apache.batik.bridge.UpdateManagerListener;
 import org.apache.batik.dom.StyleSheetProcessingInstruction;
-import org.apache.batik.dom.svg.SVGOMDocument;
-import org.apache.batik.dom.util.HashTable;
+import org.apache.batik.anim.dom.SVGOMDocument;
 import org.apache.batik.ext.swing.JAffineTransformChooser;
 import org.apache.batik.swing.JSVGCanvas;
 import org.apache.batik.swing.gvt.AbstractImageZoomInteractor;
@@ -96,12 +95,12 @@ import org.apache.batik.transcoder.print.PrintTranscoder;
 import org.apache.batik.util.ParsedURL;
 import org.apache.batik.util.Service;
 import org.apache.batik.util.XMLResourceDescriptor;
-import org.apache.batik.util.gui.DOMViewer;
+import org.apache.batik.apps.svgbrowser.DOMViewer;
 import org.apache.batik.util.gui.URIChooser;
 import org.apache.batik.util.gui.resource.ActionMap;
 import org.apache.batik.util.gui.resource.JComponentModifier;
 import org.apache.batik.util.gui.resource.MissingListenerException;
-import org.apache.batik.util.gui.resource.ResourceManager;
+import org.apache.batik.util.resources.ResourceManager;
 import org.bounce.event.PopupListener;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -1458,7 +1457,7 @@ public class SVGViewerDialog extends JDialog implements ActionMap, SVGDocumentLo
                 if ( n instanceof StyleSheetProcessingInstruction) {
                     StyleSheetProcessingInstruction sspi = (StyleSheetProcessingInstruction)n;
 
-                    HashTable attrs = sspi.getPseudoAttributes();
+                    HashMap<String,String> attrs = sspi.getPseudoAttributes();
                     final String title = (String)attrs.get("title");
                     String alt = (String)attrs.get("alternate");
 
