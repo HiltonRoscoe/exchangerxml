@@ -22,7 +22,6 @@ import net.sf.saxon.trace.InstructionInfo;
 import net.sf.saxon.lib.TraceListener;
 import net.sf.saxon.type.Type;
 import net.sf.saxon.type.TypeHierarchy;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 public class SchematronTraceListener implements TraceListener {
 
@@ -159,7 +158,7 @@ public class SchematronTraceListener implements TraceListener {
 	}
 
 	public void setOutputDestination(Logger logger){
-    	throw new NotImplementedException();
+    	throw new UnsupportedOperationException();
 	}
 
 	public void open(Controller controller){
