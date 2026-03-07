@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Assembly descriptor for the binary ZIP distribution.
+  Mirrors the Ant "zip" target in build.xml.
+  Usage: mvn package -P assembly
+  Output: target/xngr-editor.zip
+-->
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0
+                              https://maven.apache.org/xsd/assembly-2.2.0.xsd">
+  <id>dist</id>
+  <formats>
+    <format>zip</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+
+  <!-- ── Compiled JAR (built in the package phase) ── -->
+  <files>
+    <file>
+      <source>${project.basedir}/xngr-editor.jar</source>
+      <outputDirectory>/</outputDirectory>
+    </file>
+    <!-- Launcher scripts and icons -->
+    <file><source>${project.basedir}/loader.properties</source>         <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-debugger.bat</source>         <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-debugger.icns</source>        <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-debugger-icon.gif</source>    <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-document.ico</source>         <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-document-icon.gif</source>    <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-editor.bat</source>           <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-editor.icns</source>          <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-editor.ico</source>           <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-editor-icon.gif</source>      <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/xngr-splash.gif</source>           <outputDirectory>/</outputDirectory></file>
+    <file><source>${project.basedir}/Manifest.mf</source>               <outputDirectory>/</outputDirectory></file>
+  </files>
+
+  <!-- ── Directory trees ── -->
+  <fileSets>
+    <fileSet>
+      <directory>${project.basedir}/ext</directory>
+      <outputDirectory>/ext</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/extensions</directory>
+      <outputDirectory>/extensions</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/help</directory>
+      <outputDirectory>/help</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/lib</directory>
+      <outputDirectory>/lib</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/projects</directory>
+      <outputDirectory>/projects</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/samples</directory>
+      <outputDirectory>/samples</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/scenarios</directory>
+      <outputDirectory>/scenarios</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/scripts</directory>
+      <outputDirectory>/scripts</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/templates</directory>
+      <outputDirectory>/templates</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+    <fileSet>
+      <directory>${project.basedir}/types</directory>
+      <outputDirectory>/types</outputDirectory>
+      <excludes><exclude>.svn/**</exclude></excludes>
+    </fileSet>
+  </fileSets>
+
+</assembly>

@@ -1,0 +1,486 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pom.xml – Phase 1 Maven migration for Exchanger XML Editor.
+
+  All lib/ JARs are currently declared with system scope so the build
+  works without network access.  The companion GitHub issue
+  "Migrate build system from Ant to Maven" lists the Maven Central
+  coordinates that should replace each system-scope entry in Phase 2.
+
+  Ant → Maven lifecycle mapping
+  ════════════════════════════
+    ant build            → mvn package
+    ant buildFiles       → mvn compile
+    ant jar              → mvn package   (maven-jar-plugin)
+    ant run              → mvn exec:java (exec-maven-plugin)
+    ant zip              → mvn package -P assembly (maven-assembly-plugin)
+    ant clean*           → mvn clean
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.cladonia</groupId>
+  <artifactId>xngr-editor</artifactId>
+  <version>1.3</version>
+  <packaging>jar</packaging>
+  <name>Exchanger XML Editor</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Java 8 source/target keeps the same compatibility as the original Ant build -->
+    <maven.compiler.release>8</maven.compiler.release>
+    <lib>${project.basedir}/lib</lib>
+    <main.class>com.cladonia.util.loader.Loader</main.class>
+  </properties>
+
+  <!-- ═══════════════════════════════════════════════
+       BUILD
+       ═══════════════════════════════════════════════ -->
+  <build>
+    <!-- Non-standard layout: sources live directly under src/ -->
+    <sourceDirectory>src</sourceDirectory>
+
+    <!--
+      Include every non-.java file in src/ as a resource so that icon
+      directories, .properties files, schematron resources, etc. end up
+      in the JAR.  Also include xngr-splash.gif from the project root.
+    -->
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>xngr-splash.gif</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <!-- ── Compiler ── -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <release>8</release>
+          <showDeprecation>true</showDeprecation>
+          <debug>true</debug>
+          <!-- Suppress the 102 deprecation warnings to keep output readable -->
+          <compilerArgs>
+            <arg>-Xlint:none</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- ── JAR (ant: jar target) ── -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <finalName>xngr-editor</finalName>
+          <outputDirectory>${project.basedir}</outputDirectory>
+          <archive>
+            <manifest>
+              <mainClass>${main.class}</mainClass>
+              <addClasspath>true</addClasspath>
+              <classpathPrefix>./lib/</classpathPrefix>
+              <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+            </manifest>
+            <manifestEntries>
+              <Implementation-Version>1.3</Implementation-Version>
+              <Implementation-Title>xngr-editor</Implementation-Title>
+              <Implementation-Vendor>Cladonia Ltd.</Implementation-Vendor>
+              <SplashScreen-Image>xngr-splash.gif</SplashScreen-Image>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- ── exec:java (ant: run target) ── -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>${main.class}</mainClass>
+          <arguments>
+            <argument>-ms256M</argument>
+            <argument>-Xss1m</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <!-- ═══════════════════════════════════════════════
+       PROFILES
+       ═══════════════════════════════════════════════ -->
+  <profiles>
+
+    <!--
+      ant: zip  →  mvn package -P assembly
+      Produces a binary ZIP distribution mirroring the original Ant zip target.
+    -->
+    <profile>
+      <id>assembly</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.6.0</version>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/distribution.xml</descriptor>
+              </descriptors>
+              <finalName>xngr-editor</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+            <executions>
+              <execution>
+                <id>make-assembly</id>
+                <phase>package</phase>
+                <goals><goal>single</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+  </profiles>
+
+  <!-- ═══════════════════════════════════════════════
+       DEPENDENCIES
+       Phase 1: all lib/ JARs via system scope.
+       Phase 2: replace with Maven Central coordinates
+                (see GitHub issue "Migrate build system from Ant to Maven").
+       ═══════════════════════════════════════════════ -->
+  <dependencies>
+
+    <!-- ── XML / parsing ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xercesImpl</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xercesImpl.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xml-apis</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xml-apis.jar</systemPath>
+    </dependency>
+    <!-- jaxp.jar: superseded by JDK; kept only for system-scope compat -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jaxp</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jaxp.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xalan</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xalan.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>serializer</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/serializer.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xsltc</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xsltc.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>resolver</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/resolver.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jaxen</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jaxen-1.1.1.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>dom4j</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/dom4j.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jdom</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jdom.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>castor</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/castor.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>nekohtml</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/nekohtml.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>isorelax</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/isorelax.jar</systemPath>
+    </dependency>
+
+    <!-- ── Batik SVG ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-awt-util</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-awt-util.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-bridge</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-bridge.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-css</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-css.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-dom</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-dom.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-ext</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-ext.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-extension</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-extension.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-gui-util</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-gui-util.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-gvt</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-gvt.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-parser</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-parser.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-rasterizer</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-rasterizer.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-script</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-script.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-squiggle</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-squiggle.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-svg-dom</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-svg-dom.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-svggen</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-svggen.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-swing</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-swing.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-transcoder</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-transcoder.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-util</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-util.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>batik-xml</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/batik-xml.jar</systemPath>
+    </dependency>
+
+    <!-- ── XSLT / Saxon ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>saxon</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/saxon.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>saxon9he</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/saxon9he.jar</systemPath>
+    </dependency>
+
+    <!-- ── Schema validation ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jing</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jing.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>trang</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/trang.jar</systemPath>
+    </dependency>
+
+    <!-- ── PDF / FOP ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>fop</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/fop.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>avalon-framework</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/avalon-framework.jar</systemPath>
+    </dependency>
+
+    <!-- ── Web services ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>soap</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/soap.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>saaj-api</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/saaj-api.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>saaj-impl</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/saaj-impl.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>wsdl4j</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/wsdl4j.jar</systemPath>
+    </dependency>
+
+    <!-- ── Email ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>mail</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/mail.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>activation</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/activation.jar</systemPath>
+    </dependency>
+
+    <!-- ── XML security ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xmlsec</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xmlsec.jar</systemPath>
+    </dependency>
+
+    <!-- ── Apache Commons ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>commons-logging</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/commons-logging.jar</systemPath>
+    </dependency>
+    <dependency>
+      <!-- commons.jar contains org.apache.commons.cli -->
+      <groupId>com.vendor</groupId><artifactId>commons-cli</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/commons.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>commons-net</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/commons-net.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>commons-httpclient</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/commons-httpclient.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>bsf</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/bsf.jar</systemPath>
+    </dependency>
+
+    <!-- ── WebDAV ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jakarta-slide-webdav</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jakarta-slide-webdav.jar</systemPath>
+    </dependency>
+
+    <!-- ── Office file formats ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>poi</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/poi.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xbean</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xbean.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>xbean-xpath</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/xbean_xpath.jar</systemPath>
+    </dependency>
+
+    <!-- ── Scripting ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>rhino-js</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/js.jar</systemPath>
+    </dependency>
+
+    <!-- ── Syndication ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>rome</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/rome-0.9.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>rome-fetcher</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/rome-fetcher-0.9.jar</systemPath>
+    </dependency>
+
+    <!-- ── UI / Look-and-Feel ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>bounce</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/bounce.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jcalendar</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jcalendar.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>MDateSelector</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/MDateSelector.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>looks</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/looks.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>kunststoff</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/kunststoff.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>l2fprod-common-directorychooser</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/l2fprod-common-directorychooser.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>l2fprod-common-totd</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/l2fprod-common-totd.jar</systemPath>
+    </dependency>
+
+    <!-- ── Desktop integration ── -->
+    <dependency>
+      <!-- JDIC: Java Desktop Integration Components (abandoned project).
+           Keep until the JDIC-dependent code is removed or replaced. -->
+      <groupId>com.vendor</groupId><artifactId>jdic</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jdic.jar</systemPath>
+    </dependency>
+    <dependency>
+      <!-- Apple Extensions stub for compiling on non-macOS JDKs. -->
+      <groupId>com.vendor</groupId><artifactId>AppleJavaExtensions</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/AppleJavaExtensions.jar</systemPath>
+    </dependency>
+
+    <!-- ── Help system ── -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jh</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jh.jar</systemPath>
+    </dependency>
+
+    <!-- ── B-tree index ── -->
+    <dependency>
+      <!-- JISP: not published to Maven Central. -->
+      <groupId>com.vendor</groupId><artifactId>jisp</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jisp.jar</systemPath>
+    </dependency>
+
+  </dependencies>
+
+</project>
