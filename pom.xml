@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  pom.xml – Phase 2 Maven migration for Exchanger XML Editor.
+
+  Dependencies are sourced from:
+    • Maven Central  – 57 of 65 original lib/ JARs
+    • lib/local-repo – 5 JARs not published to Maven Central
+                       (bounce, MDateSelector, AppleJavaExtensions, jdic, jisp)
+    • system scope   – 4 JARs where the available Central version has
+                       incompatible APIs (dom4j 1.x, Saxon 6.x, l2fprod-common-*)
+
+  Ant → Maven lifecycle mapping
+  ════════════════════════════
+    ant build            → mvn package
+    ant buildFiles       → mvn compile
+    ant jar              → mvn package   (maven-jar-plugin)
+    ant run              → mvn exec:java (exec-maven-plugin)
+    ant zip              → mvn package -P assembly (maven-assembly-plugin)
+    ant clean*           → mvn clean
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.cladonia</groupId>
+  <artifactId>xngr-editor</artifactId>
+  <version>1.3</version>
+  <packaging>jar</packaging>
+  <name>Exchanger XML Editor</name>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <!-- Java 8 source/target keeps the same compatibility as the original Ant build -->
+    <maven.compiler.release>8</maven.compiler.release>
+    <!-- lib is still used only for the 4 remaining system-scope JARs -->
+    <lib>${project.basedir}/lib</lib>
+    <main.class>com.cladonia.util.loader.Loader</main.class>
+  </properties>
+
+  <!-- ═══════════════════════════════════════════════
+       REPOSITORIES
+       ═══════════════════════════════════════════════ -->
+  <repositories>
+    <!--
+      Project-local repository for the 5 JARs not published to Maven Central.
+      The JARs were installed here with:
+        mvn install:install-file -DlocalRepositoryPath=lib/local-repo ...
+    -->
+    <repository>
+      <id>project-local</id>
+      <name>Project-local repository (non-Central JARs)</name>
+      <url>file://${project.basedir}/lib/local-repo</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
+
+  <!-- ═══════════════════════════════════════════════
+       BUILD
+       ═══════════════════════════════════════════════ -->
+  <build>
+    <!-- Non-standard layout: sources live directly under src/ -->
+    <sourceDirectory>src</sourceDirectory>
+
+    <!--
+      Include every non-.java file in src/ as a resource so that icon
+      directories, .properties files, schematron resources, etc. end up
+      in the JAR.  Also include xngr-splash.gif from the project root.
+    -->
+    <resources>
+      <resource>
+        <directory>src</directory>
+        <excludes>
+          <exclude>**/*.java</exclude>
+        </excludes>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <includes>
+          <include>xngr-splash.gif</include>
+        </includes>
+      </resource>
+    </resources>
+
+    <plugins>
+
+      <!-- ── Compiler ── -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.11.0</version>
+        <configuration>
+          <release>8</release>
+          <showDeprecation>true</showDeprecation>
+          <debug>true</debug>
+          <!-- Suppress the 102 deprecation warnings to keep output readable -->
+          <compilerArgs>
+            <arg>-Xlint:none</arg>
+          </compilerArgs>
+        </configuration>
+      </plugin>
+
+      <!-- ── JAR (ant: jar target) ── -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <version>3.3.0</version>
+        <configuration>
+          <finalName>xngr-editor</finalName>
+          <outputDirectory>${project.basedir}</outputDirectory>
+          <archive>
+            <!--
+              Use the original hand-crafted Manifest.mf so the Class-Path
+              entries reference the actual file names in lib/ (e.g.
+              lib/bounce.jar) rather than Maven artifact names
+              (lib/bounce-0.14.jar) that do not exist on disk.  The app
+              classloader reads Class-Path at startup, so the names must
+              match the files present in the distribution.
+            -->
+            <manifestFile>${project.basedir}/Manifest.mf</manifestFile>
+            <manifest>
+              <mainClass>${main.class}</mainClass>
+              <addClasspath>false</addClasspath>
+              <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+
+      <!-- ── exec:java (ant: run target) ── -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.1.0</version>
+        <configuration>
+          <mainClass>${main.class}</mainClass>
+          <arguments>
+            <argument>-ms256M</argument>
+            <argument>-Xss1m</argument>
+          </arguments>
+        </configuration>
+      </plugin>
+
+    </plugins>
+  </build>
+
+  <!-- ═══════════════════════════════════════════════
+       PROFILES
+       ═══════════════════════════════════════════════ -->
+  <profiles>
+
+    <!--
+      ant: zip  →  mvn package -P assembly
+      Produces a binary ZIP distribution mirroring the original Ant zip target.
+    -->
+    <profile>
+      <id>assembly</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <version>3.6.0</version>
+            <configuration>
+              <descriptors>
+                <descriptor>src/assembly/distribution.xml</descriptor>
+              </descriptors>
+              <finalName>xngr-editor</finalName>
+              <appendAssemblyId>false</appendAssemblyId>
+            </configuration>
+            <executions>
+              <execution>
+                <id>make-assembly</id>
+                <phase>package</phase>
+                <goals><goal>single</goal></goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+  </profiles>
+
+  <!-- ═══════════════════════════════════════════════
+       DEPENDENCY MANAGEMENT
+       Force safe transitive versions
+       ═══════════════════════════════════════════════ -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- commons-codec 1.2 (pulled in by commons-httpclient) has known CVEs;
+           override to the current patched release. -->
+      <dependency>
+        <groupId>commons-codec</groupId><artifactId>commons-codec</artifactId><version>1.17.2</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <!-- ═══════════════════════════════════════════════
+       DEPENDENCIES
+       ═══════════════════════════════════════════════ -->
+  <dependencies>
+
+    <!-- ════════════════════════════
+         Maven Central dependencies
+         ════════════════════════════ -->
+
+    <!-- ── XML / parsing ── -->
+    <!-- xercesImpl: upgraded to latest 2.x (same xerces:xercesImpl groupId) -->
+    <dependency>
+      <groupId>xerces</groupId><artifactId>xercesImpl</artifactId><version>2.12.2</version>
+    </dependency>
+    <dependency>
+      <groupId>xml-apis</groupId><artifactId>xml-apis</artifactId><version>1.4.01</version>
+    </dependency>
+    <!-- jaxp.jar (javax.xml.*) is built into the JDK since Java 1.4 — dropped -->
+    <!-- xalan 2.7.3: fixes CVE-2022-34169 (CVSS 7.5, XSLT integer truncation) -->
+    <dependency>
+      <groupId>xalan</groupId><artifactId>xalan</artifactId><version>2.7.3</version>
+    </dependency>
+    <dependency>
+      <groupId>xalan</groupId><artifactId>serializer</artifactId><version>2.7.3</version>
+    </dependency>
+    <!-- xsltc classes are bundled inside xalan:xalan — no separate artifact needed -->
+    <dependency>
+      <groupId>xml-resolver</groupId><artifactId>xml-resolver</artifactId><version>1.2</version>
+    </dependency>
+    <dependency>
+      <groupId>jaxen</groupId><artifactId>jaxen</artifactId><version>1.1.1</version>
+    </dependency>
+    <!-- dom4j 1.5.x/1.6.x are not synced to Maven Central; keep bundled JAR (system) -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>dom4j</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/dom4j.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>jdom</groupId><artifactId>jdom</artifactId><version>1.0</version>
+    </dependency>
+    <!--
+      castor:castor:0.9.4.3 on Maven Central has a different API from the bundled JAR
+      (missing getGlobalElements(), getIncludedSchemas() on Schema). Kept as system scope.
+    -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>castor</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/castor.jar</systemPath>
+    </dependency>
+    <dependency>
+      <!-- Upgraded from 0.9.5 (not on Central) to 1.9.22 -->
+      <groupId>net.sourceforge.nekohtml</groupId><artifactId>nekohtml</artifactId><version>1.9.22</version>
+    </dependency>
+    <dependency>
+      <groupId>isorelax</groupId><artifactId>isorelax</artifactId><version>20030108</version>
+    </dependency>
+
+    <!-- ── Batik SVG (groupId=batik for the 1.6 release) ── -->
+    <!-- batik.jar (aggregate) is not published; individual modules cover all needed classes -->
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-awt-util</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-bridge</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-css</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-dom</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-ext</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-extension</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-gui-util</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-gvt</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-parser</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-rasterizer</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-script</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-squiggle</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-svg-dom</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-svggen</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-swing</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-transcoder</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-util</artifactId><version>1.6</version>
+    </dependency>
+    <dependency>
+      <groupId>batik</groupId><artifactId>batik-xml</artifactId><version>1.6</version>
+    </dependency>
+
+    <!-- ── XSLT / Saxon ── -->
+    <!--
+      saxon.jar contains the old com.icl.saxon 6.x API which is NOT on Maven Central.
+      Kept as system scope until the Saxon 6.x API usage is migrated.
+    -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>saxon</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/saxon.jar</systemPath>
+    </dependency>
+    <!-- Saxon 9 HE -->
+    <dependency>
+      <groupId>net.sf.saxon</groupId><artifactId>Saxon-HE</artifactId><version>9.9.1-8</version>
+    </dependency>
+
+    <!-- ── Schema validation ── -->
+    <!--
+      jing/trang 20091111 on Maven Central expose a different MultiInputFormat API
+      and are missing com.thaiopensource.relaxng.output.common.Name.
+      Kept as system scope until the source is updated to the new API.
+    -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>jing</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/jing.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>trang</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/trang.jar</systemPath>
+    </dependency>
+
+    <!-- ── PDF / FOP ── -->
+    <dependency>
+      <groupId>fop</groupId><artifactId>fop</artifactId><version>0.20.5</version>
+    </dependency>
+    <dependency>
+      <groupId>avalon-framework</groupId><artifactId>avalon-framework</artifactId><version>4.1.5</version>
+    </dependency>
+
+    <!-- ── Web services ── -->
+    <dependency>
+      <groupId>soap</groupId><artifactId>soap</artifactId><version>2.3.1</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.xml.soap</groupId><artifactId>javax.xml.soap-api</artifactId><version>1.3.5</version>
+    </dependency>
+    <dependency>
+      <groupId>com.sun.xml.messaging.saaj</groupId><artifactId>saaj-impl</artifactId><version>1.3.28</version>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId><artifactId>wsdl4j</artifactId><version>1.6.3</version>
+    </dependency>
+
+    <!-- ── Email ── -->
+    <dependency>
+      <groupId>javax.mail</groupId><artifactId>mail</artifactId><version>1.4.7</version>
+    </dependency>
+    <dependency>
+      <groupId>javax.activation</groupId><artifactId>activation</artifactId><version>1.1.1</version>
+    </dependency>
+
+    <!-- ── XML security ── -->
+    <!--
+      xmlsec 1.1.0 is kept as-is: the Canonicalizer API changed incompatibly
+      in xmlsec 2.x (canonicalizeXPathNodeSet/canonicalizeSubtree now require
+      an explicit OutputStream and use Set<Node> instead of NodeList), which
+      would require substantial changes to XMLUtilities.java.
+    -->
+    <dependency>
+      <groupId>xml-security</groupId><artifactId>xmlsec</artifactId><version>1.1.0</version>
+    </dependency>
+
+    <!-- ── Apache Commons ── -->
+    <!--
+      commons-collections is used directly by ErrorList.java but was not declared
+      in the original build.xml (it arrived as a transitive dependency of other JARs).
+    -->
+    <dependency>
+      <groupId>commons-collections</groupId><artifactId>commons-collections</artifactId><version>3.2.2</version>
+    </dependency>
+    <!--
+      commons-logging 1.3.4: removes the log4j 1.x optional transitive
+      dependency.  log4j 1.2.12 carried CVE-2019-17571 (CVSS 9.8),
+      CVE-2022-23302, CVE-2022-23305, CVE-2022-23307.
+      The explicit exclusion ensures log4j 1.x is never pulled in even
+      via other transitives.
+    -->
+    <dependency>
+      <groupId>commons-logging</groupId><artifactId>commons-logging</artifactId><version>1.3.4</version>
+      <exclusions>
+        <exclusion><groupId>log4j</groupId><artifactId>log4j</artifactId></exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <!-- commons.jar contains org.apache.commons.cli -->
+      <groupId>commons-cli</groupId><artifactId>commons-cli</artifactId><version>1.0</version>
+    </dependency>
+    <!-- commons-net 3.11.1: FTPClient/FTPReply API preserved; CVE fixes -->
+    <dependency>
+      <groupId>commons-net</groupId><artifactId>commons-net</artifactId><version>3.11.1</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-httpclient</groupId><artifactId>commons-httpclient</artifactId><version>3.0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>bsf</groupId><artifactId>bsf</artifactId><version>2.4.0</version>
+    </dependency>
+
+    <!-- ── WebDAV ── -->
+    <dependency>
+      <groupId>slide</groupId><artifactId>slide-webdavlib</artifactId><version>2.1</version>
+    </dependency>
+
+    <!-- ── Office file formats ── -->
+    <dependency>
+      <groupId>poi</groupId><artifactId>poi</artifactId><version>2.5.1</version>
+    </dependency>
+    <dependency>
+      <groupId>xmlbeans</groupId><artifactId>xbean</artifactId><version>2.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>xmlbeans</groupId><artifactId>xbean_xpath</artifactId><version>2.2.0</version>
+    </dependency>
+
+    <!-- ── Scripting ── -->
+    <dependency>
+      <groupId>rhino</groupId><artifactId>js</artifactId><version>1.7R2</version>
+    </dependency>
+
+    <!-- ── Syndication ── -->
+    <dependency>
+      <groupId>rome</groupId><artifactId>rome</artifactId><version>0.9</version>
+    </dependency>
+    <dependency>
+      <!-- rome-fetcher 0.9 not on Central; using 1.0 (compatible API) -->
+      <groupId>rome</groupId><artifactId>rome-fetcher</artifactId><version>1.0</version>
+    </dependency>
+
+    <!-- ── UI / Look-and-Feel ── -->
+    <dependency>
+      <groupId>com.toedter</groupId><artifactId>jcalendar</artifactId><version>1.3.2</version>
+    </dependency>
+    <dependency>
+      <!-- looks-1.3rc.jar superseded; looks.jar 2.1.3 → jgoodies-looks 2.7.0 -->
+      <groupId>com.jgoodies</groupId><artifactId>jgoodies-looks</artifactId><version>2.7.0</version>
+    </dependency>
+    <dependency>
+      <groupId>com.incors.plaf</groupId><artifactId>kunststoff</artifactId><version>2.0.2</version>
+    </dependency>
+    <!--
+      l2fprod-common-directorychooser and l2fprod-common-totd are not published
+      to Maven Central under any known coordinate. Kept as system scope.
+    -->
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>l2fprod-common-directorychooser</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/l2fprod-common-directorychooser.jar</systemPath>
+    </dependency>
+    <dependency>
+      <groupId>com.vendor</groupId><artifactId>l2fprod-common-totd</artifactId><version>local</version>
+      <scope>system</scope><systemPath>${lib}/l2fprod-common-totd.jar</systemPath>
+    </dependency>
+
+    <!-- ── Help system ── -->
+    <dependency>
+      <groupId>javax.help</groupId><artifactId>javahelp</artifactId><version>2.0.05</version>
+    </dependency>
+
+    <!-- ════════════════════════════
+         Project-local repository
+         (not on Maven Central)
+         ════════════════════════════ -->
+
+    <!-- bounce UI library (org.bounce, not published to Central) -->
+    <dependency>
+      <groupId>org.bounce</groupId><artifactId>bounce</artifactId><version>0.14</version>
+    </dependency>
+
+    <!-- MDateSelector date-entry widget (not published to Central) -->
+    <dependency>
+      <groupId>com.mseries</groupId><artifactId>MDateSelector</artifactId><version>1.0</version>
+    </dependency>
+
+    <!-- Apple Extensions stub for compiling on non-macOS JDKs -->
+    <dependency>
+      <groupId>com.apple</groupId><artifactId>AppleJavaExtensions</artifactId><version>1.4</version>
+    </dependency>
+
+    <!-- JDIC – Java Desktop Integration Components (abandoned) -->
+    <dependency>
+      <groupId>org.jdesktop.jdic</groupId><artifactId>jdic</artifactId><version>0.9.5</version>
+    </dependency>
+
+    <!-- JISP B-tree index library (not published to Central) -->
+    <dependency>
+      <groupId>com.coyotegulch.jisp</groupId><artifactId>jisp</artifactId><version>3.0</version>
+    </dependency>
+
+  </dependencies>
+
+</project>

@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Maven (pom.xml) dependency updates
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "security"
+    # Focus on security-relevant updates; ignore known-breaking upgrades
+    ignore:
+      # POI 2.x → 3+: completely different API, would require code rewrite
+      - dependency-name: "poi:poi"
+        update-types: ["version-update:semver-major"]
+      # commons-httpclient 3.x → 4.x: entirely new API (Apache HttpClient 4)
+      - dependency-name: "commons-httpclient:commons-httpclient"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions workflow updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    labels:
+      - "dependencies"
+      - "ci"
