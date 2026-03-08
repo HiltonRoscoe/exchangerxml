@@ -111,18 +111,20 @@
           <finalName>xngr-editor</finalName>
           <outputDirectory>${project.basedir}</outputDirectory>
           <archive>
+            <!--
+              Use the original hand-crafted Manifest.mf so the Class-Path
+              entries reference the actual file names in lib/ (e.g.
+              lib/bounce.jar) rather than Maven artifact names
+              (lib/bounce-0.14.jar) that do not exist on disk.  The app
+              classloader reads Class-Path at startup, so the names must
+              match the files present in the distribution.
+            -->
+            <manifestFile>${project.basedir}/Manifest.mf</manifestFile>
             <manifest>
               <mainClass>${main.class}</mainClass>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>./lib/</classpathPrefix>
+              <addClasspath>false</addClasspath>
               <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
             </manifest>
-            <manifestEntries>
-              <Implementation-Version>1.3</Implementation-Version>
-              <Implementation-Title>xngr-editor</Implementation-Title>
-              <Implementation-Vendor>Cladonia Ltd.</Implementation-Vendor>
-              <SplashScreen-Image>xngr-splash.gif</SplashScreen-Image>
-            </manifestEntries>
           </archive>
         </configuration>
       </plugin>
