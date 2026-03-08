@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bookstore>
+  <book category="fiction">
+    <title>The Great Gatsby</title>
+    <author>F. Scott Fitzgerald</author>
+    <price>10.99</price>
+  </book>
+  <book category="science">
+    <title>A Brief History of Time</title>
+    <author>Stephen Hawking</author>
+    <price>15.50</price>
+  </book>
+  <book category="fiction">
+    <title>1984</title>
+    <author>George Orwell</author>
+    <price>8.99</price>
+  </book>
+</bookstore>

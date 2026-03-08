@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<fo:root xmlns:fo="http://www.w3.org/1999/XSL/Format">
+  <fo:layout-master-set>
+    <fo:simple-page-master master-name="page" page-height="297mm" page-width="210mm">
+      <fo:region-body margin="25mm"/>
+    </fo:simple-page-master>
+  </fo:layout-master-set>
+  <fo:page-sequence master-reference="page">
+    <fo:flow flow-name="xsl-region-body">
+      <fo:block font-size="14pt" font-weight="bold">Bookstore Catalog</fo:block>
+      <fo:block>The Great Gatsby by F. Scott Fitzgerald</fo:block>
+    </fo:flow>
+  </fo:page-sequence>
+</fo:root>

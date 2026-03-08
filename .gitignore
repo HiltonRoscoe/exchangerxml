@@ -1,4 +1,5 @@
 bin/
 classes/
 build/
+target/
 xngr-editor.jar
