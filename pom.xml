@@ -84,6 +84,13 @@
       </resource>
     </resources>
 
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+    <testResources>
+      <testResource>
+        <directory>src/test/resources</directory>
+      </testResource>
+    </testResources>
+
     <plugins>
 
       <!-- ── Compiler ── -->
@@ -99,7 +106,45 @@
           <compilerArgs>
             <arg>-Xlint:none</arg>
           </compilerArgs>
+          <testRelease>11</testRelease>
+          <!-- Exclude test directory from main compilation since sourceDirectory=src
+               includes everything under src/ including src/test/java -->
+          <excludes>
+            <exclude>test/**</exclude>
+          </excludes>
         </configuration>
+      </plugin>
+
+      <!-- ── Surefire (test runner) ── -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.2.5</version>
+        <configuration>
+          <!-- Register the XDocumentFactory so dom4j creates XElement instances
+               (mirrors Main.java / XSLTDebuggerFrame.java startup) -->
+          <systemPropertyVariables>
+            <org.dom4j.factory>com.cladonia.xml.XDocumentFactory</org.dom4j.factory>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+
+      <!-- ── JaCoCo (code coverage) ── -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.11</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals><goal>prepare-agent</goal></goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>test</phase>
+            <goals><goal>report</goal></goals>
+          </execution>
+        </executions>
       </plugin>
 
       <!-- ── JAR (ant: jar target) ── -->
@@ -504,6 +549,16 @@
     <!-- JISP B-tree index library (not published to Central) -->
     <dependency>
       <groupId>com.coyotegulch.jisp</groupId><artifactId>jisp</artifactId><version>3.0</version>
+    </dependency>
+
+    <!-- ════════════════════════════
+         Test dependencies
+         ════════════════════════════ -->
+    <dependency>
+      <groupId>org.junit.jupiter</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <version>5.10.2</version>
+      <scope>test</scope>
     </dependency>
 
   </dependencies>
