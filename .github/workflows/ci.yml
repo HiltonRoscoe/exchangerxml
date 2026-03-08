@@ -1,0 +1,85 @@
+name: CI / Release
+
+# ──────────────────────────────────────────────────────────────────────────
+# Triggers
+#   • Push to master  → compile, package, upload artifact
+#   • Push of a tag matching v*  (e.g. v4.0.0-20260308-1430)
+#                     → same as above, then create a GitHub Release
+# ──────────────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # required to create GitHub Releases and upload assets
+
+jobs:
+  build:
+    name: Build & Package
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── 2. Java 21 + Maven cache ───────────────────────────────────────
+      #   The 'cache: maven' option automatically caches ~/.m2/repository
+      #   keyed on the hash of pom.xml, restoring it on subsequent runs.
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      # ── 3. Resolve dependencies ────────────────────────────────────────
+      #   Populates ~/.m2 before the patch step so the Batik JARs exist
+      #   whether or not the Maven cache was restored.
+      - name: Resolve dependencies
+        run: mvn dependency:resolve --no-transfer-progress -q
+
+      # ── 4. Patch Batik 1.6 manifests ──────────────────────────────────
+      #   batik-rasterizer-1.6.jar and batik-squiggle-1.6.jar on Maven
+      #   Central contain Windows-style backslash continuations in their
+      #   MANIFEST.MF Class-Path entries.  Java 9+ rejects these as
+      #   illegal URI characters.  The patch removes the Class-Path entry
+      #   (transitive deps are declared explicitly in pom.xml anyway).
+      - name: Patch Batik 1.6 broken manifests
+        run: python3 scripts/patch-batik-manifests.py
+
+      # ── 5. Build ────────────────────────────────────────────────────────
+      #   mvn package        → compiles + produces xngr-editor.jar (project root)
+      #   -P assembly        → additionally produces target/xngr-editor.zip
+      - name: Build (JAR + ZIP distribution)
+        run: mvn package -P assembly --no-transfer-progress
+
+      # ── 6. Upload build artifacts ──────────────────────────────────────
+      #   Always upload, so every push to master produces a downloadable
+      #   artifact in the Actions run summary (retained 30 days).
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xngr-editor-${{ github.sha }}
+          path: |
+            xngr-editor.jar
+            target/xngr-editor.zip
+          retention-days: 30
+          if-no-files-found: error
+
+      # ── 7. Create GitHub Release ───────────────────────────────────────
+      #   Only runs when the push was a tag (e.g. v4.0.0-20260308-1430).
+      #   The release is named after the tag; release notes are generated
+      #   automatically from commits since the previous tag.
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: |
+            xngr-editor.jar
+            target/xngr-editor.zip
