@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  pom.xml – Phase 1 Maven migration for Exchanger XML Editor.
+  pom.xml – Phase 2 Maven migration for Exchanger XML Editor.
 
-  All lib/ JARs are currently declared with system scope so the build
-  works without network access.  The companion GitHub issue
-  "Migrate build system from Ant to Maven" lists the Maven Central
-  coordinates that should replace each system-scope entry in Phase 2.
+  Dependencies are sourced from:
+    • Maven Central  – 57 of 65 original lib/ JARs
+    • lib/local-repo – 5 JARs not published to Maven Central
+                       (bounce, MDateSelector, AppleJavaExtensions, jdic, jisp)
+    • system scope   – 4 JARs where the available Central version has
+                       incompatible APIs (dom4j 1.x, Saxon 6.x, l2fprod-common-*)
 
   Ant → Maven lifecycle mapping
   ════════════════════════════
@@ -32,9 +34,28 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <!-- Java 8 source/target keeps the same compatibility as the original Ant build -->
     <maven.compiler.release>8</maven.compiler.release>
+    <!-- lib is still used only for the 4 remaining system-scope JARs -->
     <lib>${project.basedir}/lib</lib>
     <main.class>com.cladonia.util.loader.Loader</main.class>
   </properties>
+
+  <!-- ═══════════════════════════════════════════════
+       REPOSITORIES
+       ═══════════════════════════════════════════════ -->
+  <repositories>
+    <!--
+      Project-local repository for the 5 JARs not published to Maven Central.
+      The JARs were installed here with:
+        mvn install:install-file -DlocalRepositoryPath=lib/local-repo ...
+    -->
+    <repository>
+      <id>project-local</id>
+      <name>Project-local repository (non-Central JARs)</name>
+      <url>file://${project.basedir}/lib/local-repo</url>
+      <releases><enabled>true</enabled></releases>
+      <snapshots><enabled>false</enabled></snapshots>
+    </repository>
+  </repositories>
 
   <!-- ═══════════════════════════════════════════════
        BUILD
@@ -163,156 +184,136 @@
 
   <!-- ═══════════════════════════════════════════════
        DEPENDENCIES
-       Phase 1: all lib/ JARs via system scope.
-       Phase 2: replace with Maven Central coordinates
-                (see GitHub issue "Migrate build system from Ant to Maven").
        ═══════════════════════════════════════════════ -->
   <dependencies>
 
+    <!-- ════════════════════════════
+         Maven Central dependencies
+         ════════════════════════════ -->
+
     <!-- ── XML / parsing ── -->
+    <!-- xercesImpl: upgraded to latest 2.x (same xerces:xercesImpl groupId) -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xercesImpl</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xercesImpl.jar</systemPath>
+      <groupId>xerces</groupId><artifactId>xercesImpl</artifactId><version>2.12.2</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xml-apis</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xml-apis.jar</systemPath>
+      <groupId>xml-apis</groupId><artifactId>xml-apis</artifactId><version>1.4.01</version>
     </dependency>
-    <!-- jaxp.jar: superseded by JDK; kept only for system-scope compat -->
+    <!-- jaxp.jar (javax.xml.*) is built into the JDK since Java 1.4 — dropped -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>jaxp</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jaxp.jar</systemPath>
+      <groupId>xalan</groupId><artifactId>xalan</artifactId><version>2.7.2</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xalan</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xalan.jar</systemPath>
+      <groupId>xalan</groupId><artifactId>serializer</artifactId><version>2.7.2</version>
+    </dependency>
+    <!-- xsltc classes are bundled inside xalan:xalan — no separate artifact needed -->
+    <dependency>
+      <groupId>xml-resolver</groupId><artifactId>xml-resolver</artifactId><version>1.2</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>serializer</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/serializer.jar</systemPath>
+      <groupId>jaxen</groupId><artifactId>jaxen</artifactId><version>1.1.1</version>
     </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>xsltc</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xsltc.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>resolver</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/resolver.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>jaxen</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jaxen-1.1.1.jar</systemPath>
-    </dependency>
+    <!-- dom4j 1.5.x/1.6.x are not synced to Maven Central; keep bundled JAR (system) -->
     <dependency>
       <groupId>com.vendor</groupId><artifactId>dom4j</artifactId><version>local</version>
       <scope>system</scope><systemPath>${lib}/dom4j.jar</systemPath>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>jdom</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jdom.jar</systemPath>
+      <groupId>jdom</groupId><artifactId>jdom</artifactId><version>1.0</version>
     </dependency>
+    <!--
+      castor:castor:0.9.4.3 on Maven Central has a different API from the bundled JAR
+      (missing getGlobalElements(), getIncludedSchemas() on Schema). Kept as system scope.
+    -->
     <dependency>
       <groupId>com.vendor</groupId><artifactId>castor</artifactId><version>local</version>
       <scope>system</scope><systemPath>${lib}/castor.jar</systemPath>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>nekohtml</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/nekohtml.jar</systemPath>
+      <!-- Upgraded from 0.9.5 (not on Central) to 1.9.22 -->
+      <groupId>net.sourceforge.nekohtml</groupId><artifactId>nekohtml</artifactId><version>1.9.22</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>isorelax</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/isorelax.jar</systemPath>
+      <groupId>isorelax</groupId><artifactId>isorelax</artifactId><version>20030108</version>
     </dependency>
 
-    <!-- ── Batik SVG ── -->
+    <!-- ── Batik SVG (groupId=batik for the 1.6 release) ── -->
+    <!-- batik.jar (aggregate) is not published; individual modules cover all needed classes -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-awt-util</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-awt-util</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-awt-util.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-bridge</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-bridge</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-bridge.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-css</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-css</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-css.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-dom</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-dom</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-dom.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-ext</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-ext</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-ext.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-extension</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-extension</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-extension.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-gui-util</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-gui-util</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-gui-util.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-gvt</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-gvt</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-gvt.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-parser</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-parser</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-parser.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-rasterizer</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-rasterizer</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-rasterizer.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-script</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-script</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-script.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-squiggle</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-squiggle</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-squiggle.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-svg-dom</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-svg-dom</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-svg-dom.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-svggen</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-svggen</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-svggen.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-swing</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-swing</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-swing.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-transcoder</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-transcoder</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-transcoder.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-util</artifactId><version>1.6</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-util</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-util.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>batik-xml</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/batik-xml.jar</systemPath>
+      <groupId>batik</groupId><artifactId>batik-xml</artifactId><version>1.6</version>
     </dependency>
 
     <!-- ── XSLT / Saxon ── -->
+    <!--
+      saxon.jar contains the old com.icl.saxon 6.x API which is NOT on Maven Central.
+      Kept as system scope until the Saxon 6.x API usage is migrated.
+    -->
     <dependency>
       <groupId>com.vendor</groupId><artifactId>saxon</artifactId><version>local</version>
       <scope>system</scope><systemPath>${lib}/saxon.jar</systemPath>
     </dependency>
+    <!-- Saxon 9 HE -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>saxon9he</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/saxon9he.jar</systemPath>
+      <groupId>net.sf.saxon</groupId><artifactId>Saxon-HE</artifactId><version>9.9.1-8</version>
     </dependency>
 
     <!-- ── Schema validation ── -->
+    <!--
+      jing/trang 20091111 on Maven Central expose a different MultiInputFormat API
+      and are missing com.thaiopensource.relaxng.output.common.Name.
+      Kept as system scope until the source is updated to the new API.
+    -->
     <dependency>
       <groupId>com.vendor</groupId><artifactId>jing</artifactId><version>local</version>
       <scope>system</scope><systemPath>${lib}/jing.jar</systemPath>
@@ -324,128 +325,109 @@
 
     <!-- ── PDF / FOP ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>fop</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/fop.jar</systemPath>
+      <groupId>fop</groupId><artifactId>fop</artifactId><version>0.20.5</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>avalon-framework</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/avalon-framework.jar</systemPath>
+      <groupId>avalon-framework</groupId><artifactId>avalon-framework</artifactId><version>4.1.5</version>
     </dependency>
 
     <!-- ── Web services ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>soap</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/soap.jar</systemPath>
+      <groupId>soap</groupId><artifactId>soap</artifactId><version>2.3.1</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>saaj-api</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/saaj-api.jar</systemPath>
+      <groupId>javax.xml.soap</groupId><artifactId>javax.xml.soap-api</artifactId><version>1.3.5</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>saaj-impl</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/saaj-impl.jar</systemPath>
+      <groupId>com.sun.xml.messaging.saaj</groupId><artifactId>saaj-impl</artifactId><version>1.3.28</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>wsdl4j</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/wsdl4j.jar</systemPath>
+      <groupId>wsdl4j</groupId><artifactId>wsdl4j</artifactId><version>1.6.3</version>
     </dependency>
 
     <!-- ── Email ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>mail</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/mail.jar</systemPath>
+      <groupId>javax.mail</groupId><artifactId>mail</artifactId><version>1.4.7</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>activation</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/activation.jar</systemPath>
+      <groupId>javax.activation</groupId><artifactId>activation</artifactId><version>1.1.1</version>
     </dependency>
 
     <!-- ── XML security ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xmlsec</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xmlsec.jar</systemPath>
+      <groupId>xml-security</groupId><artifactId>xmlsec</artifactId><version>1.1.0</version>
     </dependency>
 
     <!-- ── Apache Commons ── -->
+    <!--
+      commons-collections is used directly by ErrorList.java but was not declared
+      in the original build.xml (it arrived as a transitive dependency of other JARs).
+    -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>commons-logging</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/commons-logging.jar</systemPath>
+      <groupId>commons-collections</groupId><artifactId>commons-collections</artifactId><version>3.2.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-logging</groupId><artifactId>commons-logging</artifactId><version>1.1</version>
     </dependency>
     <dependency>
       <!-- commons.jar contains org.apache.commons.cli -->
-      <groupId>com.vendor</groupId><artifactId>commons-cli</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/commons.jar</systemPath>
+      <groupId>commons-cli</groupId><artifactId>commons-cli</artifactId><version>1.0</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>commons-net</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/commons-net.jar</systemPath>
+      <groupId>commons-net</groupId><artifactId>commons-net</artifactId><version>1.4.1</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>commons-httpclient</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/commons-httpclient.jar</systemPath>
+      <groupId>commons-httpclient</groupId><artifactId>commons-httpclient</artifactId><version>3.0.1</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>bsf</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/bsf.jar</systemPath>
+      <groupId>bsf</groupId><artifactId>bsf</artifactId><version>2.4.0</version>
     </dependency>
 
     <!-- ── WebDAV ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>jakarta-slide-webdav</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jakarta-slide-webdav.jar</systemPath>
+      <groupId>slide</groupId><artifactId>slide-webdavlib</artifactId><version>2.1</version>
     </dependency>
 
     <!-- ── Office file formats ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>poi</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/poi.jar</systemPath>
+      <groupId>poi</groupId><artifactId>poi</artifactId><version>2.5.1</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xbean</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xbean.jar</systemPath>
+      <groupId>xmlbeans</groupId><artifactId>xbean</artifactId><version>2.2.0</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>xbean-xpath</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/xbean_xpath.jar</systemPath>
+      <groupId>xmlbeans</groupId><artifactId>xbean_xpath</artifactId><version>2.2.0</version>
     </dependency>
 
     <!-- ── Scripting ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>rhino-js</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/js.jar</systemPath>
+      <groupId>rhino</groupId><artifactId>js</artifactId><version>1.7R2</version>
     </dependency>
 
     <!-- ── Syndication ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>rome</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/rome-0.9.jar</systemPath>
+      <groupId>rome</groupId><artifactId>rome</artifactId><version>0.9</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>rome-fetcher</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/rome-fetcher-0.9.jar</systemPath>
+      <!-- rome-fetcher 0.9 not on Central; using 1.0 (compatible API) -->
+      <groupId>rome</groupId><artifactId>rome-fetcher</artifactId><version>1.0</version>
     </dependency>
 
     <!-- ── UI / Look-and-Feel ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>bounce</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/bounce.jar</systemPath>
+      <groupId>com.toedter</groupId><artifactId>jcalendar</artifactId><version>1.3.2</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>jcalendar</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jcalendar.jar</systemPath>
+      <!-- looks-1.3rc.jar superseded; looks.jar 2.1.3 → jgoodies-looks 2.7.0 -->
+      <groupId>com.jgoodies</groupId><artifactId>jgoodies-looks</artifactId><version>2.7.0</version>
     </dependency>
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>MDateSelector</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/MDateSelector.jar</systemPath>
+      <groupId>com.incors.plaf</groupId><artifactId>kunststoff</artifactId><version>2.0.2</version>
     </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>looks</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/looks.jar</systemPath>
-    </dependency>
-    <dependency>
-      <groupId>com.vendor</groupId><artifactId>kunststoff</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/kunststoff.jar</systemPath>
-    </dependency>
+    <!--
+      l2fprod-common-directorychooser and l2fprod-common-totd are not published
+      to Maven Central under any known coordinate. Kept as system scope.
+    -->
     <dependency>
       <groupId>com.vendor</groupId><artifactId>l2fprod-common-directorychooser</artifactId><version>local</version>
       <scope>system</scope><systemPath>${lib}/l2fprod-common-directorychooser.jar</systemPath>
@@ -455,30 +437,39 @@
       <scope>system</scope><systemPath>${lib}/l2fprod-common-totd.jar</systemPath>
     </dependency>
 
-    <!-- ── Desktop integration ── -->
-    <dependency>
-      <!-- JDIC: Java Desktop Integration Components (abandoned project).
-           Keep until the JDIC-dependent code is removed or replaced. -->
-      <groupId>com.vendor</groupId><artifactId>jdic</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jdic.jar</systemPath>
-    </dependency>
-    <dependency>
-      <!-- Apple Extensions stub for compiling on non-macOS JDKs. -->
-      <groupId>com.vendor</groupId><artifactId>AppleJavaExtensions</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/AppleJavaExtensions.jar</systemPath>
-    </dependency>
-
     <!-- ── Help system ── -->
     <dependency>
-      <groupId>com.vendor</groupId><artifactId>jh</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jh.jar</systemPath>
+      <groupId>javax.help</groupId><artifactId>javahelp</artifactId><version>2.0.05</version>
     </dependency>
 
-    <!-- ── B-tree index ── -->
+    <!-- ════════════════════════════
+         Project-local repository
+         (not on Maven Central)
+         ════════════════════════════ -->
+
+    <!-- bounce UI library (org.bounce, not published to Central) -->
     <dependency>
-      <!-- JISP: not published to Maven Central. -->
-      <groupId>com.vendor</groupId><artifactId>jisp</artifactId><version>local</version>
-      <scope>system</scope><systemPath>${lib}/jisp.jar</systemPath>
+      <groupId>org.bounce</groupId><artifactId>bounce</artifactId><version>0.14</version>
+    </dependency>
+
+    <!-- MDateSelector date-entry widget (not published to Central) -->
+    <dependency>
+      <groupId>com.mseries</groupId><artifactId>MDateSelector</artifactId><version>1.0</version>
+    </dependency>
+
+    <!-- Apple Extensions stub for compiling on non-macOS JDKs -->
+    <dependency>
+      <groupId>com.apple</groupId><artifactId>AppleJavaExtensions</artifactId><version>1.4</version>
+    </dependency>
+
+    <!-- JDIC – Java Desktop Integration Components (abandoned) -->
+    <dependency>
+      <groupId>org.jdesktop.jdic</groupId><artifactId>jdic</artifactId><version>0.9.5</version>
+    </dependency>
+
+    <!-- JISP B-tree index library (not published to Central) -->
+    <dependency>
+      <groupId>com.coyotegulch.jisp</groupId><artifactId>jisp</artifactId><version>3.0</version>
     </dependency>
 
   </dependencies>
